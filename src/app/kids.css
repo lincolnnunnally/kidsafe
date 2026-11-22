@@ -1,0 +1,139 @@
+/* Kid Safe: the same building blocks as FurFriend (globals.css), in its own colors.
+   Calm navy for trust, a sunny yellow for warmth, and a clear red only for "missing". */
+
+.ks {
+  --bg: #f3f6fb;
+  --bg-2: #e4ecf8;
+  --surface: #ffffff;
+  --surface-2: #eef3fb;
+  --ink: #1c2740;
+  --ink-soft: #4a5672;
+  --ink-faint: #55617a;
+  --line: #dbe3f0;
+  --line-strong: #c5d1e4;
+  --primary: #1f4fa8;
+  --primary-ink: #ffffff;
+  --primary-soft: #dce7fa;
+  --accent: #12735a;
+  --accent-ink: #ffffff;
+  --accent-soft: #d9f0e8;
+  --check-fill: var(--primary);
+  --check-line: #7d8bab;
+  --gold: #f2b134;
+  --alarm: #c0262d;
+  --alarm-ink: #ffffff;
+  --shadow: 0 6px 22px rgba(28, 39, 64, 0.10);
+  --shadow-lg: 0 14px 40px rgba(28, 39, 64, 0.16);
+  min-height: 100vh;
+  background: radial-gradient(1100px 560px at 85% -10%, var(--bg-2), transparent 60%), var(--bg);
+  color: var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ks {
+    --bg: #0f1420;
+    --bg-2: #151d2e;
+    --surface: #182133;
+    --surface-2: #1d283d;
+    --ink: #e7edf8;
+    --ink-soft: #b3bfd6;
+    --ink-faint: #93a0ba;
+    --line: #26324a;
+    --line-strong: #33415d;
+    --primary: #8db4ff;
+    --primary-ink: #0d1a33;
+    --primary-soft: #1d2b47;
+    --accent: #52c2a2;
+    --accent-ink: #0f241d;
+    --accent-soft: #1e332d;
+    --check-fill: #3d6bc4;
+    --check-line: #6b7a99;
+    --alarm: #ff6b6b;
+    --alarm-ink: #2a0b0b;
+  }
+}
+
+.ks .brand-accent { color: var(--gold); }
+.ks .ks-alarm {
+  background: var(--alarm);
+  color: var(--alarm-ink);
+  border-color: var(--alarm);
+}
+.ks .ks-alarm .small, .ks .ks-alarm p { color: var(--alarm-ink); }
+.ks .btn-alarm { background: var(--alarm); color: var(--alarm-ink); border-color: var(--alarm); }
+.ks .ks-photo {
+  width: 168px; height: 168px; border-radius: 28px; object-fit: cover;
+  border: 3px solid var(--line-strong); background: var(--surface-2);
+}
+.ks .ks-photo-lg { width: 100%; max-width: 360px; height: auto; aspect-ratio: 1 / 1; }
+.ks .ks-hero { display: grid; gap: 28px; grid-template-columns: 1.1fr 0.9fr; align-items: center; padding: 28px 0 8px; }
+.ks .ks-hero h1 { font-size: clamp(2rem, 4.4vw, 3rem); line-height: 1.08; margin: 8px 0 12px; }
+.ks .ks-kicker { font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: .06em; font-size: .8rem; }
+.ks .ks-shapes { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; font-size: 2.6rem; }
+.ks .ks-shapes span {
+  width: 84px; height: 84px; display: grid; place-items: center; border-radius: 24px;
+  background: var(--surface); border: 2px solid var(--line); box-shadow: var(--shadow);
+}
+.ks .ks-grid { display: grid; gap: 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ks .ks-dl { display: grid; gap: 10px; }
+.ks .ks-dl div { display: grid; gap: 2px; }
+.ks .ks-dl dt { font-size: .78rem; color: var(--ink-faint); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.ks .ks-dl dd { margin: 0; font-weight: 700; }
+.ks .ks-qr { width: 150px; height: 150px; background: #fff; border-radius: 12px; padding: 6px; }
+.ks .ks-qr svg, .ks .ks-qr img { width: 100%; height: 100%; display: block; }
+@media (max-width: 760px) {
+  .ks .ks-hero { grid-template-columns: 1fr; }
+  .ks .ks-grid { grid-template-columns: 1fr; }
+}
+
+/* Printable tag cards: wristband strip and shoe card, at true size. */
+@media print {
+  .ks .no-print { display: none !important; }
+  .ks { background: #fff !important; }
+}
+.ks .ks-print-sheet { display: flex; flex-wrap: wrap; gap: 0.25in; align-items: flex-start; }
+.ks .ks-card {
+  background: #fff; color: #111; border: 1px dashed #888; border-radius: 10px;
+  display: flex; align-items: center; gap: 0.12in; padding: 0.1in 0.14in; box-sizing: border-box;
+  font-family: var(--fb);
+}
+.ks .ks-card-band { width: 6in; height: 1in; }
+.ks .ks-card-shoe { width: 2.2in; height: 3.2in; flex-direction: column; text-align: center; justify-content: center; }
+.ks .ks-card .qr { width: 0.82in; height: 0.82in; flex: none; }
+.ks .ks-card-shoe .qr { width: 1.5in; height: 1.5in; }
+.ks .ks-card .qr svg { width: 100%; height: 100%; display: block; }
+.ks .ks-card b { font-size: 11pt; display: block; }
+.ks .ks-card span { font-size: 9pt; display: block; }
+.ks .btn-primary { box-shadow: 0 5px 16px rgba(31, 79, 168, 0.28); }
+.ks .btn-alarm { box-shadow: 0 5px 16px rgba(192, 38, 45, 0.3); }
+.ks .ks-grid-2 { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ks .ks-list { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 6px; }
+.ks .ks-figure { margin: 0; }
+.ks .ks-figure img { width: 100%; height: auto; display: block; border-radius: var(--radius); border: 1px solid var(--line); }
+.ks .ks-figure figcaption { font-size: .76rem; color: var(--ink-faint); margin-top: 6px; }
+@media (max-width: 760px) { .ks .ks-grid-2 { grid-template-columns: 1fr; } }
+.ks .ks-scroll { overflow-x: auto; border-radius: var(--radius); }
+@media (max-width: 760px) { .ks .ks-scroll img { width: 900px; max-width: none; } }
+
+/* Fold-over print cards: picture half and QR half, back to back once folded. */
+.ks .ks-fold { display: flex; border: 1px solid #888; border-radius: 10px; overflow: hidden; background: #fff; }
+.ks .ks-fold .ks-card { border: 0; border-radius: 0; }
+.ks .ks-fold-band { flex-direction: row; }
+.ks .ks-fold-band .ks-card-face { width: 3in; height: 1in; }
+.ks .ks-fold-band .ks-card-face + .ks-card-face { border-left: 1px dotted #444; }
+.ks .ks-fold-shoe { flex-direction: column; }
+.ks .ks-fold-shoe .ks-card-face { width: 2in; height: 2.6in; flex-direction: column; text-align: center; justify-content: center; }
+.ks .ks-fold-shoe .ks-card-face + .ks-card-face { border-top: 1px dotted #444; }
+.ks .ks-fold-shoe .qr { width: 1.3in; height: 1.3in; }
+
+/* Print card text sized to fit: one-line heading, small lines, the typeable code bold. */
+.ks .ks-fold .ks-card-face b { font-size: 8pt; line-height: 1.15; white-space: nowrap; }
+.ks .ks-fold .ks-card-face span { font-size: 7pt; line-height: 1.25; }
+.ks .ks-fold .ks-card-face .ks-code { font-size: 9pt; font-weight: 800; letter-spacing: .06em; }
+.ks .ks-fold-band .ks-card-face { padding: 0.06in 0.1in; gap: 0.08in; }
+.ks .ks-fold-band .qr { width: 0.8in; height: 0.8in; }
+.ks .ks-fold-shoe .ks-card-face { height: 2.9in; gap: 0.04in; }
+.ks .ks-fold-shoe .qr { width: 1.2in; height: 1.2in; }
+.ks .ks-fold-shoe .ks-card-face b { font-size: 9pt; white-space: normal; }
+.ks .ks-fold .ks-card-face:first-child b { font-size: 12pt; }
+.ks .ks-fold .ks-card-face:first-child span { font-size: 8pt; }

@@ -1,0 +1,19 @@
+/node_modules
+/.next
+/out
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# env — never commit secrets (service-role key lives in Vercel env only)
+.env
+.env.local
+.env*.local
+.env*
+
+.vercel
+supabase/.temp
+.DS_Store
+*.pem
+npm-debug.log*
+/tmp

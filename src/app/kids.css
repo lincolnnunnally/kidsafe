@@ -137,3 +137,15 @@
 .ks .ks-fold-shoe .ks-card-face b { font-size: 9pt; white-space: normal; }
 .ks .ks-fold .ks-card-face:first-child b { font-size: 12pt; }
 .ks .ks-fold .ks-card-face:first-child span { font-size: 8pt; }
+
+/* Published guide bodies (/guides/<slug>): Markdown output in the site's reading style. */
+.ks .ks-guide > * + * { margin-top: 12px; }
+.ks .ks-guide h2 { margin-top: 28px; }
+.ks .ks-guide h3 { margin-top: 20px; }
+.ks .ks-guide p, .ks .ks-guide li { color: var(--ink-soft); font-size: 1.04rem; }
+.ks .ks-guide ul, .ks .ks-guide ol { margin: 0; padding-left: 22px; }
+.ks .ks-guide li + li { margin-top: 6px; }
+.ks .ks-guide strong { color: var(--ink); }
+.ks .ks-guide a { color: var(--primary); text-decoration: underline; }
+.ks .ks-guide blockquote { margin: 0; padding-left: 14px; border-left: 3px solid var(--line); }
+.ks .ks-guide hr { border: 0; border-top: 1px solid var(--line); margin: 24px 0; }

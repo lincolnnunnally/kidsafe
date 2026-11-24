@@ -58,66 +58,106 @@ function uuid(): string {
   });
 }
 
-/** Storage can throw in private mode or when cookies are blocked. Never let that break the app. */
-function safeGet(store: Storage | undefined, key: string): string | null {
+type StoreKind = 'localStorage' | 'sessionStorage';
+
+/**
+ * Storage can throw in private mode or when cookies are blocked, and in some browsers merely reading
+ * `window.localStorage` throws a SecurityError. Resolve the store inside a try so that can't escape.
+ */
+function storage(kind: StoreKind): Storage | undefined {
   try {
-    return store?.getItem(key) ?? null;
+    return window[kind];
   } catch {
-    return null;
+    return undefined;
   }
 }
 
-function safeSet(store: Storage | undefined, key: string, value: string): void {
+/**
+ * Every value is also kept in memory for the life of the page. When the browser blocks storage, the
+ * visitor, the visit and its campaign still stay the same from one event to the next, so a guide view
+ * and the sign-up after it are not counted as two strangers.
+ */
+const memory = new Map<string, string>();
+
+/** Storage can throw in private mode or when cookies are blocked. Never let that break the app. */
+function safeGet(kind: StoreKind, key: string): string | null {
   try {
-    store?.setItem(key, value);
+    const value = storage(kind)?.getItem(key);
+    if (value != null) return value;
+  } catch {
+    /* fall back to memory */
+  }
+  return memory.get(`${kind}:${key}`) ?? null;
+}
+
+function safeSet(kind: StoreKind, key: string, value: string): void {
+  memory.set(`${kind}:${key}`, value);
+  try {
+    storage(kind)?.setItem(key, value);
+  } catch {
+    /* ignore */
+  }
+}
+
+function safeRemove(kind: StoreKind, key: string): void {
+  memory.delete(`${kind}:${key}`);
+  try {
+    storage(kind)?.removeItem(key);
   } catch {
     /* ignore */
   }
 }
 
 function anonId(): string {
-  const existing = safeGet(window.localStorage, ANON_KEY);
+  const existing = safeGet('localStorage', ANON_KEY);
   if (existing) return existing;
   const id = uuid();
-  safeSet(window.localStorage, ANON_KEY, id);
+  safeSet('localStorage', ANON_KEY, id);
   return id;
 }
 
 function sessionId(): string {
   const now = Date.now();
-  const lastSeen = Number(safeGet(window.sessionStorage, SESSION_TS_KEY) ?? 0);
-  let id = safeGet(window.sessionStorage, SESSION_KEY);
+  const lastSeen = Number(safeGet('sessionStorage', SESSION_TS_KEY) ?? 0);
+  let id = safeGet('sessionStorage', SESSION_KEY);
 
   if (!id || !lastSeen || now - lastSeen > SESSION_IDLE_MS) {
     id = uuid();
-    safeSet(window.sessionStorage, SESSION_KEY, id);
+    safeSet('sessionStorage', SESSION_KEY, id);
+    // A new visit starts with no campaign: the old one's tags must not follow it.
+    safeRemove('sessionStorage', UTM_KEY);
   }
-  safeSet(window.sessionStorage, SESSION_TS_KEY, String(now));
+  safeSet('sessionStorage', SESSION_TS_KEY, String(now));
   return id;
 }
 
 /**
  * UTM params belong to the whole session, not just the landing page — otherwise
- * a signup on page 3 looks like it came from nowhere.
+ * a signup on page 3 looks like it came from nowhere. Tags in the current address win
+ * over stored ones, so the last tagged link a visitor followed (a guide's sign-up button
+ * after a social post) is the one the rest of the visit is credited to.
  */
 function sessionUtm(): Record<string, string> {
-  const stored = safeGet(window.sessionStorage, UTM_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored) as Record<string, string>;
-    } catch {
-      /* fall through and re-read from the URL */
-    }
-  }
-
   const params = new URLSearchParams(window.location.search);
   const utm: Record<string, string> = {};
   for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'ref']) {
     const value = params.get(key);
     if (value) utm[key] = value.slice(0, 120);
   }
-  if (Object.keys(utm).length > 0) safeSet(window.sessionStorage, UTM_KEY, JSON.stringify(utm));
-  return utm;
+  if (Object.keys(utm).length > 0) {
+    safeSet('sessionStorage', UTM_KEY, JSON.stringify(utm));
+    return utm;
+  }
+
+  const stored = safeGet('sessionStorage', UTM_KEY);
+  if (stored) {
+    try {
+      return JSON.parse(stored) as Record<string, string>;
+    } catch {
+      /* ignore a damaged value */
+    }
+  }
+  return {};
 }
 
 function doNotTrackEnabled(): boolean {
@@ -201,22 +241,28 @@ export function initTelemetry(options: {
 export function track(name: string, props: Record<string, unknown> = {}): void {
   if (!isBrowser() || disabled || !config) return;
 
-  const event: TelemetryEvent = {
-    name,
-    anon_id: anonId(),
-    session_id: sessionId(),
-    user_id: currentUserId,
-    path: window.location.pathname,
-    referrer: document.referrer || null,
-    utm: sessionUtm(),
-    props,
-  };
+  // Callers fire this from success handlers (a sign-up, a payment); a tracking
+  // failure must never stop the product step that called it.
+  try {
+    const event: TelemetryEvent = {
+      name,
+      anon_id: anonId(),
+      session_id: sessionId(),
+      user_id: currentUserId,
+      path: window.location.pathname,
+      referrer: document.referrer || null,
+      utm: sessionUtm(),
+      props,
+    };
 
-  if (config.debug) console.info('[lpl-telemetry]', name, props);
+    if (config.debug) console.info('[lpl-telemetry]', name, props);
 
-  queue.push(event);
-  if (queue.length >= FLUSH_AT_COUNT) flush();
-  else scheduleFlush();
+    queue.push(event);
+    if (queue.length >= FLUSH_AT_COUNT) flush();
+    else scheduleFlush();
+  } catch {
+    /* drop the event */
+  }
 }
 
 /** Attach an opaque user id to subsequent events. Never pass an email address. */

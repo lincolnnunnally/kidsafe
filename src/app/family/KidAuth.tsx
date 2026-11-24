@@ -7,6 +7,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui";
+import { funnel } from "@/lib/telemetry";
 
 /**
  * family: a parent making their family's account (default).
@@ -44,6 +45,8 @@ export function KidAuth({ audience = "family" }: { audience?: KidAuthAudience })
         });
         const data = await res.json().catch(() => ({}));
         if (data.error) { setErr(data.error); return; }
+        // A new account; the sign-up completes when the family adds its first child (family/page.tsx).
+        funnel.signupStarted({ audience });
       }
       const { error } = await supa.auth.signInWithPassword({ email, password });
       if (error) throw new Error(error.message);

@@ -7,6 +7,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui";
+import { funnel } from "@/lib/telemetry";
 
 /**
  * family: a parent making their family's account (default).
@@ -45,8 +46,15 @@ export function KidAuth({ audience = "family" }: { audience?: KidAuthAudience })
         const data = await res.json().catch(() => ({}));
         if (data.error) { setErr(data.error); return; }
       }
-      const { error } = await supa.auth.signInWithPassword({ email, password });
+      const { data: signedIn, error } = await supa.auth.signInWithPassword({ email, password });
       if (error) throw new Error(error.message);
+      // /api/signup answers the same for a new and an existing email (no account lookup), so a new
+      // account is counted only once signed in, from the account's own creation time. The sign-up
+      // completes when the family adds its first child (family/page.tsx).
+      const createdAt = Date.parse(signedIn.user?.created_at ?? "");
+      if (mode === "up" && Number.isFinite(createdAt) && Date.now() - createdAt < 10 * 60 * 1000) {
+        funnel.signupStarted({ audience });
+      }
     } catch (e2) {
       const m = e2 instanceof Error ? e2.message : "Something went wrong.";
       setErr(/invalid login/i.test(m) ? "That email or password doesn't match." : m);

@@ -14,6 +14,7 @@ import {
   shareChild, stopSharing, updateChild, type ChildEdit, type KidChild, type KidFamily, type KidScan, type KidTag,
 } from "@/lib/kidsafe-client";
 import { ageFrom, kidShareUrl, kidTagUrl } from "@/lib/kidsafe-shared";
+import { funnel } from "@/lib/telemetry";
 import { KidTopBar } from "../KidTopBar";
 import { LocalTime } from "../LocalTime";
 import { KidAuth } from "./KidAuth";
@@ -85,6 +86,22 @@ function Dashboard({ uid, flash }: { uid: string; flash: Flash }) {
   useEffect(() => { if (family) void creditKidPartner(); }, [family]);
 
   const setChild = (c: KidChild) => setChildren((all) => all.map((x) => (x.id === c.id ? c : x)));
+  // A family is set up when its first child is saved: that is the sign-up that counts. Removing the
+  // only child and adding another later is not a new sign-up, so this account is marked once here.
+  const childAdded = (c: KidChild) => {
+    if (!children.length) {
+      const key = `lpl_once_ks_setup_${uid}`;
+      let seen = false;
+      try {
+        seen = window.localStorage.getItem(key) === "1";
+        if (!seen) window.localStorage.setItem(key, "1");
+      } catch {
+        /* storage blocked: count it */
+      }
+      if (!seen) funnel.signupCompleted({ step: "first_child_added" });
+    }
+    setChildren((all) => [...all, c]);
+  };
   const missing = children.filter((c) => c.missing);
 
   if (!loaded) return <Loading label="Loading your family…" />;
@@ -95,7 +112,7 @@ function Dashboard({ uid, flash }: { uid: string; flash: Flash }) {
 
       <ClaimTag uid={uid} kids={children} flash={flash}
         onClaimed={(t) => setTags((all) => [...all.filter((x) => x.code !== t.code), t])}
-        onChildAdded={(c) => setChildren((all) => [...all, c])} />
+        onChildAdded={childAdded} />
 
       <h1 className="mt8">Your family</h1>
       {!family?.phone && (
@@ -107,7 +124,7 @@ function Dashboard({ uid, flash }: { uid: string; flash: Flash }) {
         <h2>Children</h2>
         {!adding && <button className="btn btn-soft btn-sm" onClick={() => setAdding(true)}>+ Add a child</button>}
       </div>
-      {adding && <AddChild uid={uid} flash={flash} onDone={(c) => { setAdding(false); if (c) setChildren((all) => [...all, c]); }} />}
+      {adding && <AddChild uid={uid} flash={flash} onDone={(c) => { setAdding(false); if (c) childAdded(c); }} />}
       {!children.length && !adding && (
         <div className="card mt12 center">
           <p>No children added yet.</p>

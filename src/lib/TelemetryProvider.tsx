@@ -31,7 +31,8 @@ function TelemetryInner({ app, debug }: { app: string; debug?: boolean }) {
 
   useEffect(() => {
     if (!started.current) {
-      initTelemetry({ app, debug });
+      // /s/<token> is a child's share page (name and photo), so its token never reaches analytics.
+      initTelemetry({ app, debug, maskAfter: ["s"] });
       started.current = true;
     }
   }, [app, debug]);

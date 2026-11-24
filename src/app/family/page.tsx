@@ -86,9 +86,20 @@ function Dashboard({ uid, flash }: { uid: string; flash: Flash }) {
   useEffect(() => { if (family) void creditKidPartner(); }, [family]);
 
   const setChild = (c: KidChild) => setChildren((all) => all.map((x) => (x.id === c.id ? c : x)));
-  // A family is set up when its first child is saved: that is the sign-up that counts.
+  // A family is set up when its first child is saved: that is the sign-up that counts. Removing the
+  // only child and adding another later is not a new sign-up, so this account is marked once here.
   const childAdded = (c: KidChild) => {
-    if (!children.length) funnel.signupCompleted({ step: "first_child_added" });
+    if (!children.length) {
+      const key = `lpl_once_ks_setup_${uid}`;
+      let seen = false;
+      try {
+        seen = window.localStorage.getItem(key) === "1";
+        if (!seen) window.localStorage.setItem(key, "1");
+      } catch {
+        /* storage blocked: count it */
+      }
+      if (!seen) funnel.signupCompleted({ step: "first_child_added" });
+    }
     setChildren((all) => [...all, c]);
   };
   const missing = children.filter((c) => c.missing);
